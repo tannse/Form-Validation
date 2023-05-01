@@ -1,9 +1,16 @@
 function validator(options) {
+    var selectorRules = {};
     function validate(inputElement, rule) {
         var errorElement = rule.test(inputElement.value);
+        var rules = selectorRules[rule.selector];
+        for (let i = 0; i < rules.length; i++) {
+            errorElement = rules[i](inputElement.value);
+            if (errorElement) break;
+        }
         var errorMessage = inputElement.parentElement.querySelector(
             options.errorMessage
         );
+
         if (errorElement) {
             errorMessage.innerHTML = errorElement;
             errorMessage.parentElement.classList.add("invalid");
@@ -12,67 +19,72 @@ function validator(options) {
             errorMessage.parentElement.classList.remove("invalid");
         }
     }
-    var formElement = document.querySelector(options.form);
-
-    if (formElement) {
+    function removeError(errorMessage) {
+        errorMessage.innerHTML = "";
+        errorMessage.parentElement.classList.remove("invalid");
+    }
+    var elementForm = document.querySelector(options.form);
+    if (elementForm) {
         options.rules.forEach(function (rule) {
-            var inputElement = formElement.querySelector(rule.selector);
-            var errorMessage = inputElement.parentElement.querySelector(
-                options.errorMessage
-            );
+            var inputElement = document.querySelector(rule.selector);
+            if (selectorRules[rule.selector]) {
+                selectorRules[rule.selector].push(rule.test);
+            } else {
+                selectorRules[rule.selector] = [rule.test];
+            }
             if (inputElement) {
-                // Handling for the scenario people blur out
                 inputElement.onblur = function () {
                     validate(inputElement, rule);
                 };
-                // Handling for the scenario people start to write
-                inputElement.oninput = function () {
-                    errorMessage.innerHTML = "";
-                    errorMessage.parentElement.classList.remove("invalid");
-                };
+                var errorMessage = inputElement.parentElement.querySelector(
+                    options.errorMessage
+                );
+                if (errorMessage) {
+                    inputElement.oninput = function () {
+                        removeError(errorMessage);
+                    };
+                }
             }
         });
+        console.log(selectorRules);
     }
 }
-
-validator.isRequired = function (selector, message) {
+validator.isRequired = function (selector) {
     return {
         selector: selector,
         test: function (value) {
-            return value.trim()
-                ? undefined
-                : message || " Get wrong please check again";
+            return value.trim() ? undefined : " Cần điền vào chỗ trống.";
         },
     };
 };
-validator.isEmail = function (selector, message) {
+validator.isEmail = function (selector) {
     return {
         selector: selector,
         test: function (value) {
             var regax = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
             return regax.test(value)
                 ? undefined
-                : message || " This is not a email";
+                : "Định dạng này không phải email";
         },
     };
 };
-validator.minLength = function (selector, min, message) {
+validator.minLength = function (selector, min) {
     return {
         selector: selector,
         test: function (value) {
-            return value.length >= min
+            return value.length <= min
                 ? undefined
-                : message || ` Maximum  ${min} alphabet`;
+                : `Mật khẩu tối thiểu ${min} kí tự`;
         },
     };
 };
-validator.isConfirmed = function (selector, cb, message) {
+validator.isConfirmed = function (selector, cb) {
     return {
         selector: selector,
         test: function (value) {
             return value === cb()
                 ? undefined
-                : message || " The password not the same please try again";
+                : `The password not the same please try again`;
         },
     };
 };
