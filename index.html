@@ -74,16 +74,34 @@
                 form: "#form-1",
                 errorMessage: ".form-message",
                 rules: [
-                    validator.isRequired("#fullname"),
-                    validator.isEmail("#email"),
-                    validator.minLength("#password", 8, "Minimum 8 chracter"),
+                    validator.isRequired(
+                        "#fullname",
+                        "Please write your full name :)"
+                    ),
+                    validator.isRequired(
+                        "#email",
+                        "Please write your email :)"
+                    ),
+                    validator.isEmail(
+                        "#email",
+                        "This format not a type of email"
+                    ),
+                    validator.isRequired(
+                        "#password",
+                        "Please do not let it empty:)"
+                    ),
+                    validator.minLength("#password", 6, "Minimum 6 char"),
                     validator.isConfirmed(
                         "#password_confirmation",
                         function () {
                             return document.querySelector("#form-1 #password")
                                 .value;
                         },
-                        "This password get wrong pls check again"
+                        "Confirmed password is not correct"
+                    ),
+                    validator.isRequired(
+                        "#password_confirmation",
+                        "Please do not let it empty:)"
                     ),
                 ],
             });
